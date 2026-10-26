@@ -354,15 +354,11 @@ ChainTrace 目前主要作為：
 1. 個人鏈上金流調查工具
 2. Blockchain Data 分析與研究工具
 3. AML / 虛擬資產調查相關技術實作
-4. 多鏈資料結構與資金追蹤方法的學習專案
-5. 個人技術作品集
+4. 多鏈資料結構與資金追蹤方法的專案
+
 
 ---
 
 ## Disclaimer
 
-ChainTrace 是獨立的個人研究與開發專案。
-
-本專案與 Ethereum、Arbitrum、TRON、Solana、Across 或本 Repository 中提及的其他 Blockchain Protocol / Organization 均無隸屬或合作關係。
-
-ChainTrace 所輸出的地址關聯、資金路徑與候選結果應視為**技術分析與調查證據**，不應單獨作為對地址所有權、行為意圖、犯罪活動或法律責任的最終認定。
+ChainTrace 是獨立的個人研究開發專案。
