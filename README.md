@@ -8,7 +8,7 @@
 
 目前開發版本包含 CLI、FastAPI 後端、React 前端與 Windows 封裝程式。不同網路的支援範圍仍有差異，詳細列在下方。
 
-**公開範圍**：這個 GitHub Repository 目前用於展示專案與技術文件，尚未公開完整原始碼、安裝包或可供外部重跑的測試環境。本文所列的既有功能與測試，依據本機開發版本 `2f9d677`的保存紀錄整理；它不是這個公開 Repository 的 Commit。下列操作截圖另行提供。
+**公開範圍**：此 Repository 用於展示專案與技術文件，尚未公開完整原始碼、安裝包與測試環境。
 
 ### 操作畫面：調查概覽
 
@@ -28,7 +28,7 @@
 
 ![ChainTrace 資產進出：流入、流出、淨流量與待確認數值](assets/screenshots/02-fund-flow.png)
 
-圖 2：① 依欄位比較 Inflow、Outflow 與 Net Flow；② 分開查看 Ethereum ETH 與原生 BNB 的數量；③ 保留 DAI 的待確認資訊。「待確認」不能解讀成零或已確認餘額。
+圖 2：① 依欄位比較 Inflow、Outflow 與 Net Flow；② 分開查看 Ethereum ETH 與原生 BNB 的數量；③ 保留 DAI 的待確認資訊。「待確認」不能解讀成零或已確認餘額。截圖來自 `v0.4.0 · build ca40a106`，展示原生資產在畫面上的呈現方式。單跳與多跳的支援範圍以「支援網路」表為準。
 
 ### 關聯地址與篩選
 
@@ -40,19 +40,13 @@
 
 ChainTrace 可從已知來源交易出發，根據資產、時間及其他查詢條件，找出下一層可能相關的轉出紀錄，再以有界的 BFS（Breadth-First Search）延伸多層候選路徑。
 
-追蹤過程會保留：
-
-- 時間窗、深度、節點、邊、分支、頁數及查詢次數上限。
-- Path-local cycle prevention，避免同一路徑反覆展開。
-- 地址、合約及程式的分類結果與停止條件。
-- 相關交易證據、stop reasons 與 completeness 資訊。
-- 查詢不完整或遇到不支援情境時的限制說明。
+每次追蹤會記錄時間窗、深度與查詢上限，並保留相關交易、停止原因及資料完整度。同一路徑會略過已走訪的節點，避免反覆展開。
 
 **如何解讀結果**：系統找到的是 *downstream candidates*。由於代幣具有可替代性，即使兩筆交易在時間與金額上接近，也不足以認定它們移動的是同一批資產。候選路徑必須和已確認的金流證據分開看待。
 
 ## 支援網路
 
-以下整理文件記錄版本 `2f9d677` 的功能範圍；操作截圖與該版本的差異，另於圖說交代。
+下表依本機開發版本 `2f9d677` 整理。✅ 表示已有實作與測試紀錄，資產範圍以表內說明為準。
 
 | 網路 | 資產／標準 | 金流分析 | 單跳追蹤 | 多跳追蹤 | 範圍與限制 |
 | --- | --- | :---: | :---: | :---: | --- |
@@ -60,9 +54,7 @@ ChainTrace 可從已知來源交易出發，根據資產、時間及其他查詢
 | Arbitrum | ERC-20 | ✅ | ✅ | ✅ | 已有真實資料查詢紀錄；跨鏈路徑仍須逐一驗證。 |
 | TRON | TRC-20 / native TRX | ✅ | ✅ | ✅ | 支援有界分析，已有歷史樣本；最新版本尚未重新完成全面 live validation。 |
 | Solana | SPL Token / native SOL | ✅ | ✅ | ✅ | 支援有界追蹤，Token Account 歷史資料可能不完整。 |
-| BNB Smart Chain | BEP-20 | ✅ | 尚未完成 | 尚未完成 | BEP-20 One-Hop／Multi-Hop 尚待完成與驗證；目前 `2f9d677` 尚未提供。Native BNB、internal transactions 與通用 protocol decoding 不在本次範圍。 |
-
-其他網路的 ✅ 代表已有相應實作與測試紀錄。
+| BNB Smart Chain | BEP-20 | ✅ | 尚未完成 | 尚未完成 | 本版支援 BEP-20 金流分析。原生 BNB、內部交易與通用協定解碼未列入本版支援範圍。 |
 
 ### 各鏈資料處理
 
@@ -80,7 +72,7 @@ ChainTrace 可從已知來源交易出發，根據資產、時間及其他查詢
 
 **BNB Smart Chain**
 
-透過 Alchemy 取得 BEP-20 雙向轉帳資料，進行 event normalization、deduplication、flow 分析，並將結果呈現在 Search / UI。規劃完成後，One-Hop 與 Multi-Hop 也將在指定的時間窗與查詢上限內，找出 BEP-20 downstream candidates。**截至 `2f9d677`，後兩項尚未實作與驗證。**這部分不涵蓋 Native BNB、internal transactions 或通用協定解碼。
+透過 Alchemy 取得 BEP-20 流入與流出紀錄。工具將轉帳事件轉成統一格式、去除重複紀錄，再在查詢介面呈現金流統計。
 
 ## 跨鏈解析
 
@@ -98,9 +90,7 @@ ChainTrace 已建立不依賴單一協定的 Cross-chain Resolution Core，並�
 
 ## 調查資料與證據
 
-除了基本的交易與金流摘要，較新版本也加入 `EconomicEvent` 模型、案件資料保存、部分來源與歸因分析，以及報告相關流程。
-
-這些功能背後有幾個我在調查時特別重視的判斷原則：
+我用 `EconomicEvent` 模型區分原始轉帳紀錄與要分析的資金事件。整理案件資料時，我會用下列原則判讀結果：
 
 | 概念 | 處理方式 |
 | --- | --- |
@@ -134,40 +124,26 @@ Canonical Model 會區分網路、交易、事件、資產及地址角色。各�
 
 ## 既有驗證紀錄
 
-以下是本機保存的測試與操作紀錄，數字只對應當時的版本和測試範圍。
+以下為本機開發版本 `2f9d677`（2026/11/05）的驗證摘要。
 
-| 項目 | 保存結果 | 範圍／限制 |
-| --- | --- | --- |
-| Python regression | **3,598 passed** | `2f9d677`，2026/11/05；108 個測試檔案，0 failures / errors / skipped。 |
-| React frontend tests | **179 passed** | 同一版本的前端測試與 build 紀錄。 |
-| BSC-specific regression | **40 passed** | 已包含在 3,598 項 Python 測試中，不另加總。 |
-| Packaged BSC smoke | **11 transfers / transactions、7 assets** | Windows 封裝程式的有界真實查詢與操作紀錄；不代表完整歷史。 |
-| Earlier BSC acquisition smoke | **100 transfers / EconomicEvents、97 transactions** | 另一組歷史樣本，包含 50 inbound / 50 outbound，不與前項合併計算。 |
+| 項目 | 紀錄 |
+| --- | --- |
+| Python 回歸測試 | 3,598 項通過 |
+| React 前端測試 | 179 項通過 |
+| BNB Smart Chain 實際查詢 | 以 Windows 封裝程式驗證有限範圍內的查詢與操作 |
 
-Ethereum、Arbitrum、TRON、Solana 與特定跨鏈路由也保存有驗證資料。不過，其中部分來自較早版本或有限樣本，並未全部在最新 HEAD 重新執行 Live Validation。
-
-**重現性說明**：這個公開 Repository 尚未提供完整原始碼、測試輸入及執行紀錄，因此外部讀者目前無法僅靠這裡的檔案獨立重跑上述測試。這些數據來自本機保存的驗證報告。
+Ethereum、Arbitrum、TRON、Solana 與特定跨鏈路由也有歷史驗證紀錄，涵蓋的版本與樣本各有不同。
 
 ## 調查案例：0x91cd
 
-我曾將 ChainTrace 的部分數據蒐集及其處理流程，應用於 **iToken Wallet 0x91cd** 的鏈上調查。保存的 Ethereum 案件資料包括：
+我曾將 ChainTrace 的部分數據蒐集及其處理流程，應用於 **iToken Wallet 0x91cd** 的鏈上調查。Ethereum 案件資料共保存 **424 筆入金紀錄**，涉及 **422 個不同的交易雜湊**。
 
-- **424** 筆 inflow records（267 external、12 internal、145 ERC-20）
-- **422** 個不同的 Transaction Hashes
-- **306** 個已解析的 upstream source addresses
-
-這些數字分別代表交易紀錄、交易識別、上游來源與歸因候選
-
-這項研究也包含人工判讀、其他分析工具與案件專用腳本，並不是全部透過目前的 ChainTrace 產品介面自動完成。我希望藉由這個案例，說明在整理大量鏈上資料時，如何處理來源辨識、經濟事件去重、資產轉換。
+這項研究也包含人工判讀、其他分析工具與案件專用腳本。我用這些方法核對資金來源、去除重複的經濟事件，並辨識交換、路由或跨鏈過程中的資產移動。證據不足的紀錄仍保留待確認狀態，受害者身分與最終損失金額也尚未確認。
 
 ## 目前限制
 
-- **資料範圍**：分析受 Provider、分頁、時間窗及資源上限限制。查詢成功不代表已取得地址的完整交易歷史。
-- **各鏈支援程度不同**：BNB 的 BEP-20 One-Hop／Multi-Hop 在文件記錄版本中尚未完成；即使後續完成，也不代表涵蓋 Native BNB、internal transactions 或所有交易類型。
-- **跨鏈解析**：目前只支援指定協定與路由，不能假設所有 Bridge 交易都可還原。
-- **地址與受害者歸因**：候選金流不能直接證明地址所有權、受害者身分或犯罪損失。
-- **Protocol Decoding / Valuation**：尚未提供涵蓋所有協定的通用解碼能力，亦無完整歷史美元估值功能。
-- **已知應用問題**：部分 Ethereum 輸入曾出現 URL / Snapshot Validation 問題；GUI 也曾出現連線提示與實際查詢狀態不一致的情況，公開展示前需要再次確認。
+- **資料範圍**：結果受資料供應商、時間窗、分頁及查詢上限影響，可能只涵蓋地址的部分交易歷史。
+- **協定解碼與估值**：目前僅支援特定協定及路由，尚未提供通用協定解碼或完整的歷史美元估值。
 
 ## AI 輔助開發
 
@@ -175,9 +151,4 @@ Ethereum、Arbitrum、TRON、Solana 與特定跨鏈路由也保存有驗證資�
 
 ## 專案狀態
 
-- **既有功能**：多鏈有界資金分析、部分網路的候選追蹤、特定路由的跨鏈解析、`EconomicEvent` 與案件流程，以及 CLI、FastAPI、React UI、Windows 封裝版本。
-- **公開狀態**：目前 GitHub 主要提供專案介紹與技術文件，尚未發布可供外部下載的正式產品版本。
-
-## 使用說明
-
-ChainTrace 是我的個人研究的開發專案
+ChainTrace 是我的個人鏈上調查研究與開發專案。
